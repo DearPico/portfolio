@@ -1,3 +1,15 @@
+
+// Toujours revenir en haut lors d'un vrai chargement de page.
+if ("scrollRestoration" in history) {
+  history.scrollRestoration = "manual";
+}
+
+addEventListener("pageshow", () => {
+  if (!location.hash) {
+    requestAnimationFrame(() => window.scrollTo(0, 0));
+  }
+});
+
 document.body.classList.add("loading");
 
 const bootOverlay=document.querySelector(".boot-overlay");
@@ -174,3 +186,38 @@ if(lightboxV4){
     if(e.key==="ArrowLeft")moveLb(-1);
   });
 }
+
+
+// Téléchargement CV : blob forcé + lien direct en secours.
+const CV_URL = "https://dearpico.github.io/portfolio/cv-theo-kerfriden.pdf";
+
+document.querySelectorAll("[data-cv-download]").forEach((button) => {
+  button.addEventListener("click", async (event) => {
+    event.preventDefault();
+
+    try {
+      const response = await fetch(CV_URL, { cache: "no-store" });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = "CV-Theo-Kerfriden.pdf";
+      a.style.display = "none";
+
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1500);
+    } catch (error) {
+      // Secours : au pire le CV s'ouvre dans un nouvel onglet.
+      window.open(CV_URL, "_blank", "noopener");
+    }
+  });
+});
