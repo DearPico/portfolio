@@ -74,36 +74,77 @@ document.querySelectorAll(".project-card,.mini-card").forEach(card=>{
   });
 });
 
-let soundOn=false;
-const soundBtn=document.createElement("button");
-soundBtn.className="sound-toggle magnetic";
-soundBtn.type="button";
-soundBtn.textContent="🔇";
-soundBtn.title="Activer/désactiver les petits sons";
+let soundOn = true;
+let audioContext = null;
+
+const soundBtn = document.createElement("button");
+soundBtn.className = "sound-toggle magnetic";
+soundBtn.type = "button";
+soundBtn.textContent = "🔊";
+soundBtn.title = "Activer/désactiver les petits sons";
 document.body.appendChild(soundBtn);
 
-function blip(){
-  if(!soundOn) return;
-  try{
-    const ac=new (window.AudioContext||window.webkitAudioContext)();
-    const osc=ac.createOscillator();
-    const gain=ac.createGain();
-    osc.type="sine";
-    osc.frequency.value=520;
-    gain.gain.value=.025;
+function getAudioContext() {
+  if (!audioContext) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return null;
+    audioContext = new AudioCtx();
+  }
+
+  if (audioContext.state === "suspended") {
+    audioContext.resume().catch(() => {});
+  }
+
+  return audioContext;
+}
+
+function blip() {
+  if (!soundOn) return;
+
+  try {
+    const ac = getAudioContext();
+    if (!ac) return;
+
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+
+    osc.type = "sine";
+    osc.frequency.value = 520;
+    gain.gain.value = 0.025;
+
     osc.connect(gain);
     gain.connect(ac.destination);
+
     osc.start();
-    gain.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.07);
-    osc.stop(ac.currentTime+.08);
-  }catch(e){}
+    gain.gain.exponentialRampToValueAtTime(
+      0.0001,
+      ac.currentTime + 0.07
+    );
+    osc.stop(ac.currentTime + 0.08);
+  } catch (e) {
+    // Le son est optionnel, le site continue normalement.
+  }
 }
-soundBtn.addEventListener("click",()=>{
-  soundOn=!soundOn;
-  soundBtn.textContent=soundOn?"🔊":"🔇";
-  blip();
+
+// Débloque l'AudioContext au premier vrai clic/tap utilisateur.
+// Le son reste visuellement "activé" dès l'arrivée sur le site.
+addEventListener("pointerdown", () => {
+  if (soundOn) getAudioContext();
+}, { once: true });
+
+soundBtn.addEventListener("click", () => {
+  soundOn = !soundOn;
+  soundBtn.textContent = soundOn ? "🔊" : "🔇";
+
+  if (soundOn) {
+    getAudioContext();
+    blip();
+  }
 });
-document.querySelectorAll(".btn,.project-card,.doc-card,.mini-card").forEach(el=>el.addEventListener("mouseenter",blip));
+
+document
+  .querySelectorAll(".btn, .project-card, .doc-card, .mini-card")
+  .forEach((el) => el.addEventListener("mouseenter", blip));
 
 let typed="";
 const egg=document.createElement("div");
