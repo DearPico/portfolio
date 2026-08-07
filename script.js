@@ -132,3 +132,27 @@ if(lightboxV4){
     if(e.key==="ArrowLeft")moveLb(-1);
   });
 }
+document.querySelectorAll("[data-download-cv]").forEach(button => {
+  button.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch("./cv-theo-kerfriden.pdf");
+      const blob = await response.blob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "CV-Theo-Kerfriden.pdf";
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      window.open("./cv-theo-kerfriden.pdf", "_blank");
+    }
+  });
+});
