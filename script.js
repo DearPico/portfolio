@@ -48,15 +48,6 @@ if(bootOverlay){
   })
 });
 
-function cvSoon(){
-  let t=document.querySelector(".toast");
-  if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t)}
-  t.textContent="CV bientôt disponible — bouton prêt pour plus tard.";
-  t.classList.add("show");
-  setTimeout(()=>t.classList.remove("show"),2200);
-}
-document.querySelectorAll("[data-cv]").forEach(btn=>btn.addEventListener("click",cvSoon));
-
 const lightbox=document.querySelector(".lightbox");
 if(lightbox){
   const img=lightbox.querySelector("img");
